@@ -317,7 +317,7 @@ async def buy_pro_plan(client, callback_query):
 
 @app.on_callback_query(filters.regex("get_qr"))
 async def send_qr_code(client, callback_query):
-    qr_image_url = "https://myappme.shop/img/file_200.jpg"
+    qr_image_url = "https://postimage.me/images/2025/06/29/IMG_20250602_092755_401.jpg"  # Replace with your real Telegram file_id
 
     buttons = InlineKeyboardMarkup(
         [
@@ -329,10 +329,12 @@ async def send_qr_code(client, callback_query):
 
     await client.send_photo(
         chat_id=callback_query.message.chat.id,
-        photo=qr_image_url,
-        caption="📌 Scan this QR code to make the payment.\n\n"
-                "📤 After payment, send a screenshot and contact admin:\n"
-                "💬 [Contact Admin](https://t.me/sonuporsa)",
+        photo=file_id,
+        caption=(
+            "📌 Scan this QR code to make the payment.\n\n"
+            "📤 After payment, send a screenshot and contact admin:\n"
+            "💬 <a href='https://t.me/sonuporsa'>Contact Admin</a>"
+        ),
         reply_markup=buttons,
-        parse_mode="Markdown",
+        parse_mode="HTML"
  )
