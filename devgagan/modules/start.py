@@ -315,41 +315,50 @@ async def buy_pro_plan(client, callback_query):
     await callback_query.message.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
 
 
-@app.on_callback_query(filters.regex("get_qr"))
-async def send_qr_code(client, callback_query):
-    channel_username = "Team_Sonu2"  # apne channel ka username bina @ ke
-    message_id = 15  # yahan apni channel ki message id daalo jahan QR image hai
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+# ✅ Callback Query Handler
+@app.on_callback_query(filters.regex("get_qr"))
+async def get_qr_callback(client, callback_query):
+    try:
+        chat_id = "Team_Sonu2"  # Jahan QR saved hai
+        msg_id = 15  # QR image wali message ID
+
+        msg = await client.get_messages(chat_id, msg_id)
+        await callback_query.message.delete()
+
+        await send_qr_code(client, callback_query.message.chat.id, msg)
+
+    except Exception as e:
+        print("❌ Callback error:", e)
+        await callback_query.answer("⚠️ QR code bhejne mein error aaya.", show_alert=True)
+
+
+# ✅ QR Code Send Function (with Buttons only, no admin link in caption)
+async def send_qr_code(client, user_chat_id, msg):
     buttons = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("⬅️ Back to Plans", callback_data="see_plan")],
+            [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/sonuporsa")],
+            [InlineKeyboardButton("⬅️ Back to Plans", callback_data="see_plan")]
         ]
     )
 
     try:
-        # Channel se message fetch karo
-        msg = await client.get_messages(channel_username, message_id)
-
         if not msg.photo:
-            await callback_query.answer("❌ Is message mein koi photo nahi hai.", show_alert=True)
+            await client.send_message(user_chat_id, "❌ Is message mein koi photo nahi hai.")
             return
 
         file_id = msg.photo.file_id
 
-        await callback_query.message.delete()
-
         await client.send_photo(
-            chat_id=callback_query.message.chat.id,
+            chat_id=user_chat_id,
             photo=file_id,
-            caption=(
-                "📌 Scan this QR code to make the payment.\n\n"
-                "📤 After payment, send a screenshot and contact admin:\n"
-                "💬 [Contact Admin](https://t.me/sonuporsa)"
-            ),
+            caption="📌 Scan this QR code to make the payment.\n\n📤 After payment, send a screenshot to the admin.",
             reply_markup=buttons,
             parse_mode="Markdown"
         )
 
     except Exception as e:
-        print("Error fetching QR image:", e)
-        await callback_query.answer("⚠️ QR code fetch karne mein error aaya.", show_alert=True)
+        print("❌ Error sending QR code:", e)
+        await client.send_message(user_chat_id, "⚠️ QR code bhejne mein error aaya.")
