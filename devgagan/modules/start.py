@@ -317,7 +317,8 @@ async def buy_pro_plan(client, callback_query):
 
 @app.on_callback_query(filters.regex("get_qr"))
 async def send_qr_code(client, callback_query):
-    qr_image_url = "https://postimage.me/images/2025/06/29/IMG_20250602_092755_401.jpg"  # Replace with your real Telegram file_id
+    channel_username = "Team_Sonu2"  # apne channel ka username bina @ ke
+    message_id = 15  # yahan apni channel ki message id daalo jahan QR image hai
 
     buttons = InlineKeyboardMarkup(
         [
@@ -325,16 +326,30 @@ async def send_qr_code(client, callback_query):
         ]
     )
 
-    await callback_query.message.delete()
+    try:
+        # Channel se message fetch karo
+        msg = await client.get_messages(channel_username, message_id)
 
-    await client.send_photo(
-        chat_id=callback_query.message.chat.id,
-        photo=file_id,
-        caption=(
-            "📌 Scan this QR code to make the payment.\n\n"
-            "📤 After payment, send a screenshot and contact admin:\n"
-            "💬 <a href='https://t.me/sonuporsa'>Contact Admin</a>"
-        ),
-        reply_markup=buttons,
-        parse_mode="HTML"
- )
+        if not msg.photo:
+            await callback_query.answer("❌ Is message mein koi photo nahi hai.", show_alert=True)
+            return
+
+        file_id = msg.photo.file_id
+
+        await callback_query.message.delete()
+
+        await client.send_photo(
+            chat_id=callback_query.message.chat.id,
+            photo=file_id,
+            caption=(
+                "📌 Scan this QR code to make the payment.\n\n"
+                "📤 After payment, send a screenshot and contact admin:\n"
+                "💬 [Contact Admin](https://t.me/sonuporsa)"
+            ),
+            reply_markup=buttons,
+            parse_mode="Markdown"
+        )
+
+    except Exception as e:
+        print("Error fetching QR image:", e)
+        await callback_query.answer("⚠️ QR code fetch karne mein error aaya.", show_alert=True)
